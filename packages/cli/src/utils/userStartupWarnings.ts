@@ -5,10 +5,10 @@
  */
 
 import fs from 'node:fs/promises';
+import { homedir as osHomedir } from 'node:os';
 import path from 'node:path';
 import process from 'node:process';
 import {
-  homedir,
   getCompatibilityWarnings,
   WarningPriority,
   type StartupWarning,
@@ -39,10 +39,10 @@ const homeDirectoryCheck: WarningCheck = {
     try {
       const [workspaceRealPath, homeRealPath] = await Promise.all([
         fs.realpath(workspaceRoot),
-        fs.realpath(homedir()),
+        fs.realpath(osHomedir()),
       ]);
 
-      if (workspaceRealPath === homeRealPath) {
+      if (path.resolve(workspaceRealPath) === path.resolve(homeRealPath)) {
         // If folder trust is enabled and the user trusts the home directory, don't show the warning.
         if (
           isFolderTrustEnabled(settings) &&
@@ -96,7 +96,9 @@ const folderTrustCheck: WarningCheck = {
 
     if (isHeadlessMode()) {
       throw new FatalUntrustedWorkspaceError(
-        'Gemini CLI is not running in a trusted directory. To proceed, either use `--skip-trust`, set the `GEMINI_CLI_TRUST_WORKSPACE=true` environment variable, or trust this directory in interactive mode.',
+        'Gemini CLI is not running in a trusted directory. To proceed, either use `--skip-trust`, ' +
+          'set the `GEMINI_CLI_TRUST_WORKSPACE=true` environment variable, or trust this directory in interactive mode. ' +
+          'For more details, see https://geminicli.com/docs/cli/trusted-folders/#headless-and-automated-environments',
       );
     }
 
